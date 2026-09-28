@@ -27,10 +27,15 @@ interface IkhaaliSemVerErrorsV1 {
   //////////////////////////////////////////////////////////////////////////////
 
 
+  error FunctionUnimplemented(bytes4 selector);
+  error FunctionDeprecated(bytes4 selector);
 
   //////////////////////////////////////////////////////////////////////////////
   ///// Functionality Errors
   //////////////////////////////////////////////////////////////////////////////
 
+  error PendingAdminMustAcceptBeforeCalling();
+  error PendingAdminMustAcceptOrDecline(address pending);
+  error AdminFunctionCalledByNonAdmin(address caller, address admin);
 
 }
