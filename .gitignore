@@ -1,1 +1,13 @@
+# Compiler output
+out/
+cache/
+*.bin
+*.abi
+broadcast/**/*.json
+!broadcast/**/run-latest.json
+
+# Environment
+.env
+
+# OS
 .DS_Store
