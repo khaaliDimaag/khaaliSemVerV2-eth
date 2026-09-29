@@ -2,10 +2,12 @@
 pragma solidity ^0.8.20;
 
 import {IERC165} from "./eip/IERC165.sol";
-import {IkhaaliSemVerErrorsV1} from "./util/IkhaaliSemVerErrorsV1.sol";
+
 import {IkhaaliAdmin} from "./util/IkhaaliAdmin.sol";
+import {IkhaaliSemVerErrorsV1} from "./util/IkhaaliSemVerErrorsV1.sol";
 
 import {SemVer} from "./util/khaaliSemVerV2Types.sol";
+import {Major, Minor, Patch} from "./util/khaaliSemVerV2Types.sol";
 
 enum FunctionDeprecation {
   UNIMPLEMENTED,
@@ -23,7 +25,7 @@ struct FunctionStatus {
 
 /// @title IkhaaliSemVerV2
 /// @notice Explicit Semantic Versioning for contracts
-interface IkhaaliSemVerV2 is IERC165, IkhaaliSemVerErrorsV1, IkhaaliAdmin {
+interface IkhaaliSemVerV2 is IERC165, IkhaaliAdmin, IkhaaliSemVerErrorsV1 {
 
   enum UpdateKind {
     UNCHANGED, BREAKING, FEATURE, FIX
@@ -41,22 +43,34 @@ interface IkhaaliSemVerV2 is IERC165, IkhaaliSemVerErrorsV1, IkhaaliAdmin {
     SemVer newVersion
   );
 
+  //////////////////////////////////////////////////////////////////////////////
+  ///// Getters
+  //////////////////////////////////////////////////////////////////////////////
+
+  /// @notice Primary function to get the contract version struct
+  /// @return The contract version as a tuple
+  function version() external view
+    returns (Major, Minor, Patch, string memory, string memory);
+
+  /// @notice Primary function to get the core contract version
+  /// @return The semantic version core as a string
+  function pretty() external view returns (string memory);
+
+  /// @notice Primary function to get the full contract version
+  /// @return The full semantic version as a string
+  function semver() external view returns (string memory);
+
+  /// @notice Get the pre-release tag if it exists
+  /// @return The pre-release tag as a string, or empty string
+  function prerelease() external view returns (string memory);
+
+  /// @notice Get the build tag if it exists
+  /// @return The build tag as a string, or empty string
+  function revision() external view returns (string memory);
 
   //////////////////////////////////////////////////////////////////////////////
   ///// External Functions
   //////////////////////////////////////////////////////////////////////////////
-
-  /// @notice Primary function to get the contract version
-  /// @return The contract version as a tuple
-  function version() external view returns (SemVer memory);
-
-  /// @notice Primary function to get the contract version
-  /// @return The semver core as a string
-  function pretty() external view returns (string memory);
-
-  /// @notice Primary function to get the contract version
-  /// @return The full semver as a string
-  function semver() external view returns (string memory);
 
   ///
   /// @param raw Raw SemVer string
@@ -69,7 +83,7 @@ interface IkhaaliSemVerV2 is IERC165, IkhaaliSemVerErrorsV1, IkhaaliAdmin {
   function compare(bytes memory raw) external returns (bool isGreater);
 
   //////////////////////////////////////////////////////////////////////////////
-  ///// Admin Functionality
+  ///// Main Functionality
   //////////////////////////////////////////////////////////////////////////////
 
   function deprecateContract(address newAddress) external;

@@ -21,7 +21,7 @@ abstract contract khaaliSemVerV2 is
   khaaliAdmin
 {
 
-  SemVer private version;
+  SemVer public version;
   mapping(bytes4 => FunctionStatus) private functionStatusFull;
   mapping(bytes4 => FunctionDeprecation) private functionStatus;
 
@@ -55,16 +55,44 @@ abstract contract khaaliSemVerV2 is
 
 
   //////////////////////////////////////////////////////////////////////////////
-  ///// External Functions
+  ///// Getters
   //////////////////////////////////////////////////////////////////////////////
 
+  /// @inheritdoc IkhaaliSemVerV2
   function pretty() public view returns (string memory) {
-
+    return string.concat(
+      _uint2str(Major.unwrap(version.major)),
+      ".",
+      _uint2str(Minor.unwrap(version.minor)),
+      ".",
+      _uint2str(Patch.unwrap(version.patch))
+    );
   }
 
+  /// @inheritdoc IkhaaliSemVerV2
   function semver() public view returns (string memory) {
-
+    string memory pre; string memory build;
+    if(bytes(version.pre).length != 0)
+      pre = string.concat("-", version.pre);
+    if(bytes(version.build).length != 0)
+      build = string.concat("+", version.build);
+    return string.concat(pretty(), pre, build);
   }
+
+  /// @inheritdoc IkhaaliSemVerV2
+  function prerelease() public view returns (string memory) {
+    return version.pre;
+  }
+
+  /// @inheritdoc IkhaaliSemVerV2
+  function revision() public view returns (string memory) {
+    return version.build;
+  }
+
+
+  //////////////////////////////////////////////////////////////////////////////
+  ///// External Functions
+  //////////////////////////////////////////////////////////////////////////////
 
   function compare(string memory _raw) public returns (bool isGreater) {
     return compare(bytes(_raw));
@@ -78,7 +106,7 @@ abstract contract khaaliSemVerV2 is
   }
 
   //////////////////////////////////////////////////////////////////////////////
-  ///// Admin Only Functions
+  ///// Main Functionality
   //////////////////////////////////////////////////////////////////////////////
 
   function deprecate() external onlyAdmin {
@@ -88,6 +116,27 @@ abstract contract khaaliSemVerV2 is
   //////////////////////////////////////////////////////////////////////////////
   ///// Internal Functions
   //////////////////////////////////////////////////////////////////////////////
+
+  function _uint2str(uint n) internal pure returns (string memory) {
+
+    if(n == 0) return "0";
+
+    uint temp = n;
+    uint digits;
+
+    while(temp != 0) {
+      digits++;
+      temp /= 10;
+    }
+
+    bytes memory buffer = new bytes(digits);
+    while(n != 0) {
+      buffer[--digits] = bytes1(uint8(0x30 + (n%10)));
+      n /= 10;
+    }
+
+    return string(buffer);
+  }
 
 
   //////////////////////////////////////////////////////////////////////////////
