@@ -8,6 +8,8 @@ import {SemVerToken, SemVer} from "./util/khaaliSemVerV2Types.sol";
 import {Major, Minor, Patch} from "./util/khaaliSemVerV2Types.sol";
 import {khaaliSemVerParserV1} from "./util/khaaliSemVerParserV1.sol";
 
+import {khaaliAdmin} from "./util/khaaliAdmin.sol";
+
 import {ERC165} from "./eip/ERC165.sol";
 import {IERC165} from "./eip/IERC165.sol";
 
@@ -15,12 +17,11 @@ import {IERC165} from "./eip/IERC165.sol";
 abstract contract khaaliSemVerV2 is
   IkhaaliSemVerV2,
   ERC165,
-  khaaliSemVerParserV1
+  khaaliSemVerParserV1,
+  khaaliAdmin
 {
 
   SemVer private version;
-  address private admin;
-  address private pendingAdmin;
   mapping(bytes4 => FunctionStatus) private functionStatusFull;
   mapping(bytes4 => FunctionDeprecation) private functionStatus;
 
@@ -28,33 +29,6 @@ abstract contract khaaliSemVerV2 is
   //////////////////////////////////////////////////////////////////////////////
   ///// Modifiers
   //////////////////////////////////////////////////////////////////////////////
-
-  modifier onlyAdmin() {
-    _onlyAdmin();
-    _;
-  }
-
-  // @dev this contract should not be used in place of Ownable or AccessControl
-  function _onlyAdmin() private view {
-    if(msg.sender == pendingAdmin) revert PendingAdminMustAcceptBeforeCalling();
-    require(
-      msg.sender == admin,
-      AdminFunctionCalledByNonAdmin(msg.sender, admin)
-    );
-  }
-
-  modifier anyAdmin() {
-    _anyAdmin();
-    _;
-  }
-
-  // @dev this contract should not be used in place of Ownable or AccessControl
-  function _anyAdmin() private view {
-    require(
-      msg.sender == admin || msg.sender == pendingAdmin,
-      "Not an admin or pending admin!"
-    );
-  }
 
   modifier funcIsActive(bytes4 selector) {
     _funcIsActive(selector);
@@ -75,9 +49,8 @@ abstract contract khaaliSemVerV2 is
   ///// Initializers
   //////////////////////////////////////////////////////////////////////////////
 
-  constructor(string memory _raw) {
+  constructor(string memory _raw) khaaliAdmin(msg.sender) {
     version = parseVersion(bytes(_raw));
-    admin = msg.sender;
   }
 
 
@@ -112,42 +85,26 @@ abstract contract khaaliSemVerV2 is
 
   }
 
-
-  //////////////////////////////////////////////////////////////////////////////
-  ///// Contract Upkeep
-  //////////////////////////////////////////////////////////////////////////////
-
-  function updateAdmin(address _new) external onlyAdmin {
-    require(
-      pendingAdmin == address(0),
-      PendingAdminMustAcceptOrDecline(pendingAdmin)
-    );
-
-    pendingAdmin = _new;
-  }
-
-  function acceptAdmin() external {
-    require(
-      pendingAdmin == msg.sender,
-      AdminFunctionCalledByNonAdmin(msg.sender, pendingAdmin)
-    );
-
-    admin = pendingAdmin;
-    pendingAdmin = address(0);
-  }
-
-  function declineAdmin() external anyAdmin {
-    pendingAdmin = address(0);
-  }
-
   //////////////////////////////////////////////////////////////////////////////
   ///// Internal Functions
   //////////////////////////////////////////////////////////////////////////////
 
 
   //////////////////////////////////////////////////////////////////////////////
-  ///// Private Helpers
+  ///// ERC Related
   //////////////////////////////////////////////////////////////////////////////
 
+  /// @dev explicit calls to avoid mid-chain hops forgetting to call `super`
+  function supportsInterface(bytes4 _id)
+    public
+    virtual
+    view
+    override(khaaliAdmin, ERC165, IERC165)
+    returns (bool)
+  {
+    return _id == type(IkhaaliSemVerV2).interfaceId
+      || khaaliAdmin.supportsInterface(_id)
+      || ERC165.supportsInterface(_id); // @dev redundant, should be removed
+  }
 
 }

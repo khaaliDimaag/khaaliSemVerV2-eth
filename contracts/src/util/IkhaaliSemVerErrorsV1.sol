@@ -34,8 +34,4 @@ interface IkhaaliSemVerErrorsV1 {
   ///// Functionality Errors
   //////////////////////////////////////////////////////////////////////////////
 
-  error PendingAdminMustAcceptBeforeCalling();
-  error PendingAdminMustAcceptOrDecline(address pending);
-  error AdminFunctionCalledByNonAdmin(address caller, address admin);
-
 }

@@ -3,6 +3,7 @@ pragma solidity ^0.8.20;
 
 import {IERC165} from "./eip/IERC165.sol";
 import {IkhaaliSemVerErrorsV1} from "./util/IkhaaliSemVerErrorsV1.sol";
+import {IkhaaliAdmin} from "./util/IkhaaliAdmin.sol";
 
 import {SemVer} from "./util/khaaliSemVerV2Types.sol";
 
@@ -22,7 +23,7 @@ struct FunctionStatus {
 
 /// @title IkhaaliSemVerV2
 /// @notice Explicit Semantic Versioning for contracts
-interface IkhaaliSemVerV2 is IERC165, IkhaaliSemVerErrorsV1 {
+interface IkhaaliSemVerV2 is IERC165, IkhaaliSemVerErrorsV1, IkhaaliAdmin {
 
   enum UpdateKind {
     UNCHANGED, BREAKING, FEATURE, FIX
@@ -75,10 +76,4 @@ interface IkhaaliSemVerV2 is IERC165, IkhaaliSemVerErrorsV1 {
 
   function abandonContract() external;
 
-
-  //////////////////////////////////////////////////////////////////////////////
-  ///// Contract Upkeep
-  //////////////////////////////////////////////////////////////////////////////
-
-  function updateAdmin(address newAdmin) external;
 }
