@@ -90,7 +90,7 @@ abstract contract khaaliAdmin is IkhaaliAdmin, ERC165 {
 
     pendingAdmin = _new;
 
-    emit AdminPending(pendingAdmin);
+    emit AdminNominated(pendingAdmin);
   }
 
   /// @inheritdoc IkhaaliAdmin

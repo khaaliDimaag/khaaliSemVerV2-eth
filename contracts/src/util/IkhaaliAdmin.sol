@@ -27,7 +27,7 @@ interface IkhaaliAdmin is IERC165 {
   ///// Events
   //////////////////////////////////////////////////////////////////////////////
 
-  event AdminPending(address indexed pendingAdmin);
+  event AdminNominated(address indexed pendingAdmin);
   event AdminUpdated(address indexed oldAdmin, address indexed newAdmin);
   event AdminDeclined(address indexed pendingAdmin, address indexed declinedBy);
 
@@ -47,7 +47,7 @@ interface IkhaaliAdmin is IERC165 {
 
   /// @notice Start the two step handoff to update the admin of the contract
   /// @dev Can only be called by the current contract admin
-  /// @dev Emits AdminPending
+  /// @dev Emits AdminNominated
   /// @dev Requires pending admin to be unset
   /// @param newAdmin The new admin for the contract
   function updateAdmin(address newAdmin) external;
