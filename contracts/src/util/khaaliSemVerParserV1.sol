@@ -198,7 +198,7 @@ abstract contract khaaliSemVerParserV1 is IkhaaliSemVerErrorsV1 {
 
 
   /// @dev reverts on anything outside [0-9A-Za-z.+-]
-  function _whichToken(bytes1 _c) private pure returns (SemVerToken) {
+  function _whichToken(bytes1 _c) internal pure returns (SemVerToken) {
 
     if(_c == 0x2B)
       return SemVerToken.PLUS;

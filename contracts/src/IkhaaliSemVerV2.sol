@@ -72,12 +72,12 @@ interface IkhaaliSemVerV2 is IERC165, IkhaaliAdmin, IkhaaliSemVerErrorsV1 {
   ///// External Functions
   //////////////////////////////////////////////////////////////////////////////
 
-  ///
+  /// @notice Compare the provider semver with contract semver
   /// @param raw Raw SemVer string
   /// @return isGreater Whether given string is greater than contract version
   function compare(string memory raw) external returns (bool isGreater);
 
-  ///
+  /// @notice Compare the provider semver with contract semver
   /// @param raw Raw SemVer string in bytes
   /// @return isGreater Whether given string is greater than contract version
   function compare(bytes memory raw) external returns (bool isGreater);
@@ -86,8 +86,8 @@ interface IkhaaliSemVerV2 is IERC165, IkhaaliAdmin, IkhaaliSemVerErrorsV1 {
   ///// Main Functionality
   //////////////////////////////////////////////////////////////////////////////
 
-  function deprecateContract(address newAddress) external;
+  // function deprecateContract(address newAddress) external;
 
-  function abandonContract() external;
+  // function abandonContract() external;
 
 }

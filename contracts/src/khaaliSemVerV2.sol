@@ -94,16 +94,89 @@ abstract contract khaaliSemVerV2 is
   ///// External Functions
   //////////////////////////////////////////////////////////////////////////////
 
-  function compare(string memory _raw) public returns (bool isGreater) {
+  /// @inheritdoc IkhaaliSemVerV2
+  function compare(string memory _raw) public view returns (bool isGreater) {
     return compare(bytes(_raw));
   }
 
-
-  function compare(bytes memory _raw) public returns (bool isGreater) {
+  /// @inheritdoc IkhaaliSemVerV2
+  function compare(bytes memory _raw) public view returns (bool isGreater) {
 
     SemVer memory _v = parseVersion(_raw);
 
+    // major, minor, and patch versions are always compared numerically
+    if(Major.unwrap(_v.major) != Major.unwrap(version.major))
+      return Major.unwrap(_v.major) > Major.unwrap(version.major);
+    else if(Minor.unwrap(_v.minor) != Minor.unwrap(version.minor))
+      return Minor.unwrap(_v.minor) > Minor.unwrap(version.minor);
+    else if(Patch.unwrap(_v.patch) != Patch.unwrap(version.patch))
+      return Patch.unwrap(_v.patch) > Patch.unwrap(version.patch);
+
+    // compare pre-release tags
+
+    bytes memory _preArgBytes = bytes(_v.pre);
+    bytes memory _preStateBytes = bytes(version.pre);
+
+
+    // a pre-release version has lower precedence than a normal version
+    if(_preArgBytes.length == 0 && _preStateBytes.length == 0) return false;
+    else if(_preStateBytes.length == 0) return false;
+    else if(_preArgBytes.length == 0) return true;
+
+    uint _idxArg; uint _idxState;
+
+    while(true) {
+      bool _argIsDone = _idxArg >= _preArgBytes.length;
+      bool _stateIsDone = _idxState >= _preStateBytes.length;
+
+      // 4. A larger set of pre-release fields has higher precedence
+      if(_argIsDone && _stateIsDone) return false;
+      else if(_argIsDone) return false;
+      else if(_stateIsDone) return true;
+
+      (uint _argEnd, bool _isArgNumeric) =
+        _walkIdentifier(_preArgBytes, _idxArg);
+      (uint _stateEnd, bool _isStateNumeric) =
+        _walkIdentifier(_preStateBytes, _idxState);
+
+      uint _argLen = _argEnd - _idxArg;
+      uint _stateLen = _stateEnd - _idxState;
+
+      // 3. Numeric identifiers have lower precedence than non-numeric.
+      if(_isArgNumeric && !_isStateNumeric) return false;
+      else if(!_isArgNumeric && _isStateNumeric) return true;
+
+      // 2. Identifiers with nonDigits are compared in ASCII sort order.
+      else if(!_isArgNumeric && !_isStateNumeric) {
+        uint _smaller = _argLen < _stateLen? _argLen : _stateLen;
+
+        for(uint _i; _i < _smaller; _i++) {
+          bytes1 _argChar = _preArgBytes[_idxArg + _i];
+          bytes1 _stateChar = _preStateBytes[_idxState + _i];
+          if(_argChar != _stateChar) return _argChar > _stateChar;
+        }
+
+        if(_argLen != _stateLen) return _argLen > _stateLen;
+      }
+
+      // 1. Identifiers consisting of only digits are compared numerically.
+      else {
+        if(_argLen != _stateLen) return _argLen > _stateLen;
+
+        for(uint _i; _i < _argLen; _i++) {
+          bytes1 _argChar = _preArgBytes[_idxArg + _i];
+          bytes1 _stateChar = _preStateBytes[_idxState + _i];
+          if(_argChar != _stateChar) return _argChar > _stateChar;
+        }
+      }
+
+      // Equal identifier pair, lets step past the '.' (or beyond length)
+      _idxArg = _argEnd + 1;
+      _idxState = _stateEnd + 1;
+    }
+
   }
+
 
   //////////////////////////////////////////////////////////////////////////////
   ///// Main Functionality
@@ -136,6 +209,28 @@ abstract contract khaaliSemVerV2 is
     }
 
     return string(buffer);
+  }
+
+  function _walkIdentifier(bytes memory dotSeparated, uint idx)
+    private
+    pure
+    returns(uint end, bool isNumeric)
+  {
+
+    bool sawNonDigit;
+
+    while(idx < dotSeparated.length) {
+      SemVerToken _t = _whichToken(dotSeparated[idx]);
+
+      if(_t == SemVerToken.DOT) break;
+
+      if(_t != SemVerToken.ZERO && _t != SemVerToken.POSITIVE)
+        sawNonDigit = true;
+
+      idx++;
+    }
+
+    return (idx, !sawNonDigit);
   }
 
 
